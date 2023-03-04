@@ -31,8 +31,18 @@ class Card():
         return (self.cards.index(self._card) + 2)
 
     def __str__(self):
+        '''
+        Required for 'print()' function
+        '''
 
         return '({0},{1})'.format(self._card, self._suit)
+
+    def __repr__(self):
+        '''
+        Implementing Object representation
+        '''
+
+        return 'Card({0},{1})'.format(self._card, self._suit)
 
     def __eq__(self, other):
         '''
