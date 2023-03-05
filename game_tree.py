@@ -65,31 +65,58 @@ class Tree():
     '''
 
     def __init__(self, num_nodes):
-        self.Node = {i: Node() for i in range(num_nodes)}
+        self.node_map = {i: {} for i in range(num_nodes)}
+        self.action_map = {i: {} for i in range(num_nodes)}
 
-    def accumulate_regrets(self, state, weight):
+    # def print_map(self):
+    #     print(self.node_map)
+
+    def accumulate_regrets(self, state, weights):
         if state.is_terminal():
-            pass
-            # utility = state.utility()
+            # pass
+            utility = state.utility()
+            # print("utility:", utility)
+            return utility
 
-        info_set = state.info_set()
         turn = state.state['turn']
+        info_set = state.info_set(turn)
         actions = state.actions()
 
-        if info_set not in action_map[turn]:
-            action_map[turn][info_set] = actions
+        if info_set not in self.action_map[turn]:
+            self.action_map[turn][info_set] = actions
 
-        if info_set not in node_map[turn]:
-            node_map[turn][info_set] = Node(actions)
+        if info_set not in self.node_map[turn]:
+            # print('action in node_map', actions)
+            self.node_map[turn][info_set] = Node(actions)
 
         # Find the node and extract strategy from it
-        node = node_map[turn][info_set]
-        strategy = node.strategy(weight[turn])
+        node = self.node_map[turn][info_set]
+        strategy = node.strategy(weights[turn])
+        # print("strategy:", strategy)
 
         utility = {a: 0 for a in actions}
-        node_utility = np.zeros(len(node_map))
+        node_utility = np.zeros(len(self.node_map))
 
+        # print("actions", actions)
         for action in actions:
             new_weights = [p if i != turn else p*strategy[action]
-                           for i, p in enumerate(weight)]
-            new_state =
+                           for i, p in enumerate(weights)]
+            # print("action:", action)
+            # print("node_map:", self.node_map)
+            # print("action_map:", self.action_map)
+            new_state = state.succesor_state(
+                action, id=turn, update=False, return_object=True)
+            r = self.accumulate_regrets(new_state, new_weights)
+            utility[action] = r[turn]
+            node_utility += r*strategy[action]
+
+        reach_prob = 1
+        for p, w in enumerate(weights):
+            if p != turn:
+                reach_prob *= w
+
+        for action in actions:
+            regret = utility[action] - node_utility[turn]
+            node.regret_sum[action] += regret*reach_prob
+
+        return node_utility

@@ -3,12 +3,17 @@ from itertools import permutations
 from tqdm import tqdm
 import numpy as np
 from game_tree import Tree
+import sys
+import pickle
 
 from state import State
 from hand_eval import leduc_eval
+from game_tree import Tree
+
+sys.setrecursionlimit(6000)
 
 
-def learn(num_iterations, cards, num_cards):
+def learn(num_iterations, cards, num_cards, gameT):
     '''
     Implements the learning algorithm
     '''
@@ -16,6 +21,7 @@ def learn(num_iterations, cards, num_cards):
     card_combinations = [list(t) for t in set(permutations(cards, num_cards))]
     num_players = num_cards-1
     num_rounds = 2
+    # gameT = Tree(num_players)
 
     for _ in tqdm(range(num_iterations), desc='learning'):
 
@@ -24,11 +30,16 @@ def learn(num_iterations, cards, num_cards):
 
         # Initialize start state
         ss = State(num_players, num_rounds, leduc_eval)
-        state = ss.start_state(card_combinations[random_int])
-        probs = np.ones(num_players)
+        ss.start_state(card_combinations[random_int])
+        wts = np.ones(num_players)
+        gameT.accumulate_regrets(ss, wts)
+
+    with open('cfr_train.picle', 'wb') as f:
+        pickle.dump((gameT.node_map, gameT.action_map), f)
+    print(gameT.node_map)
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     num_players = 2
     num_iterations = 10000
 
@@ -39,4 +50,4 @@ if __name__ == 'main':
 
     game_tree = Tree(num_players)
 
-    learn(10000, cards, num_cards)
+    learn(10000, cards, num_cards, gameT=game_tree)

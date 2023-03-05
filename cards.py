@@ -58,6 +58,9 @@ class Card():
 
         return (self.rank() < other.rank())
 
+    def __hash__(self):
+        return hash(repr(self))
+
     @property
     def value(self):
         '''

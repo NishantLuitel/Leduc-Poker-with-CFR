@@ -106,6 +106,12 @@ class Player():
         '''
         return self._raised
 
+    @property
+    def id(self):
+        '''Returns player id'''
+
+        return self._id
+
     def reset_bet(self, value=1):
         self._bet_size = value
 
@@ -192,7 +198,8 @@ class State():
 
         # Only keep Community card in information set if round is > 0
         # Because community card is only revealed after 1st round
-        info_set = f"{player.card}|{'' if r == 0 else self._state['cc']}|{self.history[:r+1]}"
+        info_set = f"{player.card}|{'' if r == 0 else self._state['cc']}| \
+            {self._state['history'][:r+1]}"
         return info_set
 
     def succesor_state(self, action, id=0, update=True, return_object=False):
@@ -209,10 +216,15 @@ class State():
 
         r = new_state._state['round']
 
+        if new_state.is_terminal():
+            if return_object:
+                return new_state
+            return new_state._state
+
         # Take action
         player = new_state.get_player(id)
         match_amount = new_state._state['bet_size'] - player.total
-        print("match_amount:", match_amount)
+        # print("match_amount:", match_amount)
         current_bet_size = 2*(r+1)
         amount = 0
         if action == 'R':
@@ -268,10 +280,11 @@ class State():
         if num_raises_so_far == self.num_players:
             return ['F', 'C']
         else:
-            if len(history_for_round) == 0:
+            if len(history_for_round) == 0 and round_no == 0:
                 return ['F', 'R',  'Ch']
-            elif (all(['Ch' == a or 'F' == a for a in history_for_round])):
-                return ['F', 'R', 'C', 'Ch']
+            elif (round_no == 0 and all(['Ch' == a or 'F' == a for a in history_for_round])
+                  and history_for_round.count('Ch') < self.num_players):
+                return ['F', 'R', 'Ch']
             else:
                 return ['F', 'C', 'R']
 
@@ -282,6 +295,10 @@ class State():
         active_players = self.num_active_players()
         if active_players == 1:
             return True
+
+        # Terminal if
+        # if self._state['history'][r].count('F') == self.num_players-1:
+        #     return True
 
         # Terminal if the game is in final round, and all the active players
         #  have had an action(disregarding 'Check' action)
@@ -295,6 +312,10 @@ class State():
         return False
 
     def utility(self):
+        '''
+        Finds utility value for every player
+        '''
+
         active_players = self.num_active_players()
         if active_players == 1:
             hand_scores = []

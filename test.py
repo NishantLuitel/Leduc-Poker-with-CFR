@@ -25,7 +25,7 @@ print("leduc_eval of {0} ,{0} is {1} ".format(a, leduc_eval(a, [m])))
 # print(p.has_raised)
 
 # test state class
-ss = State(3, 2, leduc_eval)
+ss = State(2, 2, leduc_eval)
 state_dict = ss.start_state([a, b, b, a])
 
 
@@ -42,11 +42,11 @@ succ_dict = ss.succesor_state('Ch', state_dict['turn'])
 print(succ_dict, 'Available actions: ', ss.actions())
 print(ss.is_terminal())
 print(bet_size_print(ss))
-succ_dict = ss.succesor_state('R', succ_dict['turn'])
+succ_dict = ss.succesor_state('F', succ_dict['turn'])
 print(succ_dict, 'Available actions: ', ss.actions())
 print(ss.is_terminal())
 print(bet_size_print(ss))
-succ_dict = ss.succesor_state('R', succ_dict['turn'])
+succ_dict = ss.succesor_state('F', succ_dict['turn'])
 print(succ_dict, 'Available actions: ', ss.actions())
 print(ss.is_terminal())
 print(bet_size_print(ss))
