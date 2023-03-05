@@ -119,7 +119,7 @@ class State():
     def __copy__(self):
         '''Implement copy function'''
 
-        new_state = State(self.num_players, self.num_rounds, self.hand_eval)
+        new_state = State(self.num_players, self.num_rounds, self.eval)
 
         new_state.players = deepcopy(self.players)
         new_state.history = deepcopy(self.history)
@@ -161,7 +161,7 @@ class State():
             players = self.players
 
         for p in players:
-            if p.id == id:
+            if p._id == id:
                 return p
         return None
 
@@ -175,10 +175,14 @@ class State():
         Returns information set for the given player id
         '''
         player = self.players[id]
-        info_set = f"{player.card|{self._state[1]}|{self.history[:self.round+1]}}"
+        r = self._state['round']
+
+        # Only keep Community card in information set if round is > 0
+        # Because community card is only revealed after 1st round
+        info_set = f"{player.card}|{'' if r == 0 else self._state['cc']}|{self.history[:r+1]}"
         return info_set
 
-    def succesor_state(self, action, id, update=False):
+    def succesor_state(self, action, id=0, update=False):
         '''
         Returns the next state, given the action for a player
         '''
@@ -199,8 +203,9 @@ class State():
         new_state._state['history'][r].append(action)
 
         # Find the turn
+        turn = new_state._state['turn']
         while(True):
-            turn = (new_state._state[2]+1) % self.num_players
+            turn = (turn+1) % self.num_players
             if new_state.players[turn].active:
                 break
 
@@ -209,7 +214,7 @@ class State():
 
         # Update round
         if len(new_state._state['history'][r]) - \
-                new_state._state.count('Ch') == active_players:
+                new_state._state['history'][r].count('Ch') == active_players:
             new_state._state['round'] += 1
 
             # Reset the raised variable for next round
@@ -224,6 +229,7 @@ class State():
     def actions(self):
         '''
         Returns available actions to take for current player
+        Assumes: the terminal state hasn't been reached even if it is
         '''
 
         num_raises_so_far = sum([p.has_raised for p in self.players])
@@ -233,8 +239,7 @@ class State():
         if num_raises_so_far == self.num_players:
             return ['F', 'C']
         else:
-            if len(history_for_round) == 0 or len(history_for_round) < \
-                    self.num_players and all(['Ch' in history_for_round]):
+            if len(history_for_round) == 0 or (all(['Ch' == a or 'F' == a for a in history_for_round])):
                 return ['F', 'C', 'R', 'Ch']
             else:
                 return ['F', 'C', 'R']
@@ -252,7 +257,7 @@ class State():
 
         r = self._state['round']
         if self._state['round'] == self.num_rounds-1 and \
-                len(self._state['history'][r]) - self._state.count('Ch') == \
+                len(self._state['history'][r]) - self._state['history'][r].count('Ch') == \
                 active_players:
             return True
 

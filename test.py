@@ -16,6 +16,7 @@ b = Card('K', 'spade')
 # print("leduc_eval of {0} ,{0} is {1} ".format(b, leduc_eval(b, [b])))
 
 
+# test state.py
 # test player class
 # p = Player(0)
 # print(p.has_raised)
@@ -25,4 +26,15 @@ b = Card('K', 'spade')
 # test state class
 ss = State(2, 2, leduc_eval)
 state_dict = ss.start_state([a, b, b])
-print(state_dict)
+print(state_dict, 'Available actions: ', ss.actions())
+print(ss.is_terminal())
+succ_dict = ss.succesor_state('F', state_dict['turn'])
+print(succ_dict, 'Available actions: ', ss.actions())
+print(ss.is_terminal())
+succ_dict = ss.succesor_state('R', succ_dict['turn'])
+print(succ_dict, 'Available actions: ', ss.actions())
+print(ss.is_terminal())
+succ_dict = ss.succesor_state('R', succ_dict['turn'])
+print(succ_dict, 'Available actions: ', ss.actions())
+print(ss.is_terminal())
+print(ss.info_set(0))
