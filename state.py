@@ -6,13 +6,15 @@ state implementation
 
 from cards import Card
 from copy import deepcopy, copy
+import numpy as np
 
 
 class Player():
 
     def __init__(self, id):
         self._id = id
-        self._bets = 0
+        self._bet_size = 1
+        self.total = 1
         self._active = True
         self._raised = False
 
@@ -23,6 +25,10 @@ class Player():
     @property
     def card(self):
         return self._card
+
+    @property
+    def bet_size(self):
+        return self._bet_size
 
     def __repr__(self):
 
@@ -37,22 +43,23 @@ class Player():
         self._active = False
         self._raised = False
 
-    def _call(self):
+    def _call(self, amount):
         '''
         Implementing action 'call' by player
         '''
 
         # Increase number of bets
-        self._bets += 1
+        self._bet_size += amount
+        self.total += amount
 
-    def _bet(self):
+    def _bet(self, amount):
         '''
         Implementing action 'bet' by player
         '''
 
         # Increase number of bets
-        if self._bets == 0:
-            self._bets += 1
+        self._bet_size += amount
+        self.total += amount
 
     def _raise(self):
         '''
@@ -67,9 +74,8 @@ class Player():
         Implenting action 'check' by player
         '''
         pass
-        return True
 
-    def action(self, act: str):
+    def action(self, act: str, bet_amount=0):
         '''
         Take the action as given by 'act' variable
         '''
@@ -78,8 +84,9 @@ class Player():
             self._fold()
         elif act == 'R':
             self._raise()
+            self._bet(bet_amount)
         elif act == 'C':
-            self._call()
+            self._call(bet_amount)
         elif act == 'Ch':
             self._check()
         # else:
@@ -98,6 +105,12 @@ class Player():
         Return if the player is active(has folded)
         '''
         return self._raised
+
+    def reset_bet(self, value=1):
+        self._bet_size = value
+
+    def reset_total(self):
+        self.total = 1
 
 
 class State():
@@ -145,7 +158,7 @@ class State():
         round_no = round_no
         self._state = {'players': self.players, 'cc': community_card,
                        'turn': turn, 'round': round_no,
-                       'history': self.history}
+                       'history': self.history, 'bet_size': 1}
         return self._state
 
     @property
@@ -182,24 +195,35 @@ class State():
         info_set = f"{player.card}|{'' if r == 0 else self._state['cc']}|{self.history[:r+1]}"
         return info_set
 
-    def succesor_state(self, action, id=0, update=False):
+    def succesor_state(self, action, id=0, update=True, return_object=False):
         '''
         Returns the next state, given the action for a player
         '''
 
-        if update:
+        if not update:
             new_state = copy(self)
         else:
             new_state = self
 
         active_players = new_state.num_active_players()
 
+        r = new_state._state['round']
+
         # Take action
         player = new_state.get_player(id)
-        player.action(action)
+        match_amount = new_state._state['bet_size'] - player.total
+        print("match_amount:", match_amount)
+        current_bet_size = 2*(r+1)
+        amount = 0
+        if action == 'R':
+            amount = current_bet_size + match_amount
+        elif action == 'C':
+            amount = match_amount
+        player.action(action, amount)
+        new_state._state['bet_size'] = player.total
 
         # Update History
-        r = new_state._state['round']
+
         new_state._state['history'][r].append(action)
 
         # Find the turn
@@ -215,13 +239,18 @@ class State():
         # Update round
         if len(new_state._state['history'][r]) - \
                 new_state._state['history'][r].count('Ch') == active_players:
-            new_state._state['round'] += 1
+            if new_state._state['round'] < self.num_rounds - 1:
+                new_state._state['round'] += 1
 
             # Reset the raised variable for next round
             for p in new_state.players:
                 p._raised = False
+                p.reset_bet(1)
+            # new_state._state['bet_size'] = 1
 
         # Return successor state
+        if return_object:
+            return new_state
         return (new_state._state)
 
     # def
@@ -239,8 +268,10 @@ class State():
         if num_raises_so_far == self.num_players:
             return ['F', 'C']
         else:
-            if len(history_for_round) == 0 or (all(['Ch' == a or 'F' == a for a in history_for_round])):
-                return ['F', 'C', 'R', 'Ch']
+            if len(history_for_round) == 0:
+                return ['F', 'R',  'Ch']
+            elif (all(['Ch' == a or 'F' == a for a in history_for_round])):
+                return ['F', 'R', 'C', 'Ch']
             else:
                 return ['F', 'C', 'R']
 
@@ -262,3 +293,80 @@ class State():
             return True
 
         return False
+
+    def utility(self):
+        active_players = self.num_active_players()
+        if active_players == 1:
+            hand_scores = []
+            winners = [p.id for p in self.players if p.active]
+
+        else:
+            # Get the community card if in round 1
+            cc = '' if self._state['round'] == 0 else self._state['cc']
+            hand_scores = [self.eval(p.card, [cc])
+                           for p in self.players]
+            active_hand_scores = [self.eval(p.card, [cc])
+                                  for p in self.players if p.active]
+            winners = []
+
+            # Find maximum hand score for active players
+            maximum = max(active_hand_scores)
+
+            # Append all the players that have above maximum value
+            for i, score in enumerate(hand_scores):
+                player = self.get_player(i)
+                if player.active and score == maximum:
+                    winners.append(i)
+
+        pot_total = self.pot_total()
+        # Divide the total pot among players
+        payoff = pot_total/len(winners)
+        payoffs = [-p.total for p in self.players]
+
+        # Add the payoffs to winner
+        for w in winners:
+            payoffs[w] += payoff
+
+        return np.array(payoffs)
+
+    def pot_total(self):
+
+        #     # Maintain value of total and current raise
+        #     # total = self.num_players
+        #     # current_raise = 1
+        #     # for h in self.history:
+
+        #     #     # Only look to accumulate to pot if history length more than 0
+        #     #     if len(h) > 0:
+        #     #         for a in h:
+        #     #             if a == 'R':
+        #     #                 total += 2*current_raise - current_raise
+        #     #                 current_raise *= 2
+        #     #             if a == 'C':
+        #     #                 total += current_raise
+        #     #     # Reset the current raise
+        #     #     current_raise = 1
+        #     # return total
+        total = 0
+        for p in self.players:
+            total += p.total
+        return total
+
+    # def bet_total(self, id):
+
+    #     # Maintain value of total and current raise
+    #     total = 1
+    #     current_raise = 1
+    #     for h in self.history:
+
+    #         # Only look to accumulate to pot if history length more than 0
+    #         if len(h) > 0:
+    #             for i, a in enumerate(h):
+    #                 current_raise *= 2
+    #                 total += current_raise
+
+    #                 total += 2*current_raise
+    #                 if a == 'C':
+    #                     total += current_raise
+    #         current_raise = 1
+    #     return total

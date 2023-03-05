@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Node:
     '''
     Node class defines particular nodes for the game tree
@@ -64,8 +67,29 @@ class Tree():
     def __init__(self, num_nodes):
         self.Node = {i: Node() for i in range(num_nodes)}
 
-    def accumulate_regrets(state):
+    def accumulate_regrets(self, state, weight):
         if state.is_terminal():
+            pass
             # utility = state.utility()
 
         info_set = state.info_set()
+        turn = state.state['turn']
+        actions = state.actions()
+
+        if info_set not in action_map[turn]:
+            action_map[turn][info_set] = actions
+
+        if info_set not in node_map[turn]:
+            node_map[turn][info_set] = Node(actions)
+
+        # Find the node and extract strategy from it
+        node = node_map[turn][info_set]
+        strategy = node.strategy(weight[turn])
+
+        utility = {a: 0 for a in actions}
+        node_utility = np.zeros(len(node_map))
+
+        for action in actions:
+            new_weights = [p if i != turn else p*strategy[action]
+                           for i, p in enumerate(weight)]
+            new_state =
