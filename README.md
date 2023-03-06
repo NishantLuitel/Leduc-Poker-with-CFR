@@ -39,6 +39,11 @@ Play game in the console with:
 python3 play.py
 ```
 
+Play game in the GUI with:
+```{python}
+python3 play_gui.py
+```
+
 Note : This repository implements must of it's functionality from 1st reference link
 
 # References
