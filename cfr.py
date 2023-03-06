@@ -33,7 +33,7 @@ def learn(num_iterations, cards, num_cards, gameT):
         wts = np.ones(num_players)
         gameT.accumulate_regrets(ss, wts)
 
-    with open('trained_models/cfr_train2.pickle', 'wb') as f:
+    with open('trained_models/cfr_train3.pickle', 'wb') as f:
         pickle.dump((gameT.node_map, gameT.action_map), f)
     print(gameT.node_map)
 

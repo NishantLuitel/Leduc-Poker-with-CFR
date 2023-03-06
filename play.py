@@ -5,7 +5,7 @@ from hand_eval import leduc_eval
 from itertools import permutations
 import numpy as np
 
-with open('trained_models/cfr_train2.pickle', 'rb') as f:
+with open('trained_models/cfr_train3.pickle', 'rb') as f:
     node_map, action_map = pickle.load(f)
 
 
@@ -53,7 +53,13 @@ while(not ss.is_terminal()):
         human_card = ss.get_player
         valid_actions = ss.actions()
         action = input("Choose action from '{0}':".format(valid_actions))
-        ss.succesor_state(action)
+        while(action in valid_actions):
+            ss.succesor_state(action)
+        else:
+            action = input(
+                "Choose action from '{0}' only:".format(valid_actions))
+
+
 else:
     print("AI card is {0}".format(ai_card))
     print("Your score: {0}".format(ss.utility()[human_id]))

@@ -276,6 +276,10 @@ class State():
         round_no = self._state['round']
         history_for_round = self._state['history'][round_no]
 
+        history = []
+        for h in self._state['history']:
+            history += h
+
         if num_raises_so_far == self.num_players:
             return ['F', 'C']
         else:
@@ -285,7 +289,10 @@ class State():
                   and history_for_round.count('Ch') < self.num_players):
                 return ['F', 'R', 'Ch']
             else:
-                return ['F', 'C', 'R']
+                active_players = self.num_active_players()
+                if 'R' in history_for_round[-1:-(active_players):-1]:
+                    return ['F', 'C', 'R']
+                return ['F', 'R']
 
     def is_terminal(self):
         '''Determine if the current state is indeed terminal'''
