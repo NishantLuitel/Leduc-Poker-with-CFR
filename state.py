@@ -198,8 +198,7 @@ class State():
 
         # Only keep Community card in information set if round is > 0
         # Because community card is only revealed after 1st round
-        info_set = f"{player.card}|{'' if r == 0 else self._state['cc']}| \
-            {self._state['history'][:r+1]}"
+        info_set = f"{player.card}|{'' if r == 0 else self._state['cc']}|{self._state['history'][:r+1]}"
         return info_set
 
     def succesor_state(self, action, id=0, update=True, return_object=False):

@@ -8,7 +8,6 @@ import pickle
 
 from state import State
 from hand_eval import leduc_eval
-from game_tree import Tree
 
 sys.setrecursionlimit(6000)
 
@@ -34,14 +33,14 @@ def learn(num_iterations, cards, num_cards, gameT):
         wts = np.ones(num_players)
         gameT.accumulate_regrets(ss, wts)
 
-    with open('cfr_train.picle', 'wb') as f:
+    with open('trained_models/cfr_train2.pickle', 'wb') as f:
         pickle.dump((gameT.node_map, gameT.action_map), f)
     print(gameT.node_map)
 
 
 if __name__ == '__main__':
     num_players = 2
-    num_iterations = 10000
+    num_iterations = 20000
 
     # number of cards is 3 because we include community card in it
     num_cards = num_players + 1
@@ -50,4 +49,4 @@ if __name__ == '__main__':
 
     game_tree = Tree(num_players)
 
-    learn(10000, cards, num_cards, gameT=game_tree)
+    learn(num_iterations, cards, num_cards, gameT=game_tree)
