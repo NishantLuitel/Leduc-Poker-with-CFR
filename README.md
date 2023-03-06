@@ -10,6 +10,18 @@ Leduc poker is a 2 player simpified version of widely known Texas Hold'em poker 
 - The maximum number of raises is capped at four per round.
 - The player with the best hand (using a simplified poker hand ranking) at the end of the second round wins the pot.
 
+# What is CFR?
+
+- At the beginning of the algorithm, we initialize the counterfactual values of each information set to zero.
+- The algorithm then plays many iterations of the game, where each iteration consists of the following steps:
+  a. For each player, the algorithm traverses the game tree and computes the counterfactual values for each information set that the player can reach.
+  b. Using the computed counterfactual values, the algorithm updates the regret values for each action that the player could have taken at each information set.
+  c. The algorithm then computes a strategy for each player based on the current regret values.
+  d. The algorithm uses the computed strategies to play a sample game and updates the counterfactual values of each information set.
+- After many iterations, the algorithm converges to a Nash equilibrium, which is a pair of strategies that are optimal for both players
+
+Credit : ChatGPT
+
 # How to train?
 Activate your virtual environment and install requirements
 
