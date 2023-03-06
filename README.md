@@ -46,6 +46,7 @@ Note : This repository implements must of it's functionality from 1st reference 
 - https://github.com/zanussbaum/pluribus
 - https://github.com/IanSullivan/PokerCFR
 - Steps to building a Poker AI by Thomas Trenner: https://medium.com/@thomas.trenner
+- https://www.quora.com/What-is-an-intuitive-explanation-of-counterfactual-regret-minimization
 - https://github.com/Jeremiah9000/Poker-with-Python
 - Southey, F., et al. Bayes’ Bluff: Opponent Modelling in Poker.
 - Lanctot, M. (2013). Monte Carlo Sampling and Regret Minimization for equilibrium computation and decision making in large extensive form games.
