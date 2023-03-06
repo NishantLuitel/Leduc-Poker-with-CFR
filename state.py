@@ -214,6 +214,7 @@ class State():
         active_players = new_state.num_active_players()
 
         r = new_state._state['round']
+        turn = new_state._state['turn']
 
         if new_state.is_terminal():
             if return_object:
@@ -221,7 +222,7 @@ class State():
             return new_state._state
 
         # Take action
-        player = new_state.get_player(id)
+        player = new_state.get_player(turn)
         match_amount = new_state._state['bet_size'] - player.total
         # print("match_amount:", match_amount)
         current_bet_size = 2*(r+1)
@@ -238,7 +239,6 @@ class State():
         new_state._state['history'][r].append(action)
 
         # Find the turn
-        turn = new_state._state['turn']
         while(True):
             turn = (turn+1) % self.num_players
             if new_state.players[turn].active:
@@ -263,8 +263,6 @@ class State():
         if return_object:
             return new_state
         return (new_state._state)
-
-    # def
 
     def actions(self):
         '''
