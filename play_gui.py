@@ -19,6 +19,9 @@ num_cards = num_players+1
 
 
 def get_image_name(card):
+    '''
+    This function maps our card object to it's correspoing image name
+    '''
     card_name_dict = {
         'A': 'Ace',
         '2': 'Two',
@@ -130,7 +133,6 @@ def get_ai_id(root, canvas):
     button0.destroy()
 
     # var.wait_variable()
-    print("var:", var.get())
     return var.get()
 
 
